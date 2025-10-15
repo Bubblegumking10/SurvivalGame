@@ -8,6 +8,9 @@ public class ZombieHealth : MonoBehaviour
     private UnityEngine.AI.NavMeshAgent agent;
     private Collider col;
 
+    [Header("Death Effects")]
+    public GameObject deathEffect; // assign the particle prefab here
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -30,14 +33,23 @@ public class ZombieHealth : MonoBehaviour
     {
         Debug.Log("Zombie dead!");
 
-        // Disable movement
+        // Stop moving and colliding
         if (agent) agent.enabled = false;
         if (col) col.enabled = false;
 
-        // Play death animation
-        animator.CrossFade("Z_FallingForward", 0.1f);
-        // or animator.Play("Z_FallingBack");
+        // Play death animation (optional)
+        if (animator != null)
+        {
+            animator.CrossFade("Z_FallingForward", 0.1f);
+        }
 
-        Destroy(gameObject, 4f);
+        // Spawn particle explosion
+        if (deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position + Vector3.up * 1f, Quaternion.identity);
+        }
+
+        // Destroy zombie after a delay
+        Destroy(gameObject, 2f);
     }
 }
