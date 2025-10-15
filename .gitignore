@@ -26,3 +26,10 @@ Thumbs.db
 
 # Crash reports
 sysinfo.txt
+
+#Custom Paths
+
+[Aa]ssets/FreeTestCharacterAsuna/Textures/AsunaBody/AsunaBodyPSDSourcefile.zip
+[Aa]ssets/FreeTestCharacterAsuna/Textures/AsunaHead/AsunaHeadPSDSourcefile.zip
+[Aa]ssets/FreeTestCharacterAsuna/Textures/CharacterStandardEquipment/CharacterStandardEquipmentPSDSourcefile.zip
+
