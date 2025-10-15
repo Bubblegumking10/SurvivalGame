@@ -436,9 +436,10 @@ GameObject:
   - component: {fileID: 6621469921516745598}
   - component: {fileID: -2735872066795672372}
   - component: {fileID: -8321586005622812994}
+  - component: {fileID: 4871616843853494950}
   m_Layer: 0
   m_Name: Zombie2
-  m_TagString: Untagged
+  m_TagString: Zombie
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -495,11 +496,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3579cfff1a3f24781864efe266ef78bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieAI
-  detectionRange: 25
-  attackRange: 2
-  wanderRadius: 15
-  wanderTimer: 5
-  damage: 10
+  chaseDistance: 50
+  attackDistance: 2
+  viewAngle: 80
 --- !u!65 &6621469921516745598
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -519,8 +518,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.43399787, y: 1.8037456, z: 0.34227467}
+  m_Center: {x: 0.021129012, y: 0.89860576, z: -0.02436018}
 --- !u!54 &-2735872066795672372
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -570,6 +569,19 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &4871616843853494950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1998371697940912222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b63b9b529c3647949ed6d243cc7e261, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieHealth
+  maxHealth: 100
 --- !u!1 &2057808353243881084
 GameObject:
   m_ObjectHideFlags: 0

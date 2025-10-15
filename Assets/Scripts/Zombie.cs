@@ -1,122 +1,153 @@
 using UnityEngine;
-using UnityEngine.AI;  // For pathfinding
+using UnityEngine.AI;
 
 public class ZombieAI : MonoBehaviour
 {
-    public float detectionRange = 25f;
-    public float attackRange = 2f;
-    public float wanderRadius = 15f;
-    public float wanderTimer = 5f;
-    public float damage = 10f;
-
-    private Transform player;
     private NavMeshAgent agent;
     private Animator animator;
-
+    private Transform player;
+    private float wanderRadius = 20f;
+    private float wanderTimer = 5f;
     private float timer;
-    private bool isAttacking = false;
+
+    // Distances
+    public float chaseDistance = 50f;
+    public float attackDistance = 1.5f;
+    public float viewAngle = 80f; // front view cone
+
+    // Attack timing
+    private float attackCooldown = 2f;
+    private float lastAttackTime = 0f;
+
+    // States
+    private enum State { Idle, Wander, Chase, Attack }
+    private State currentState = State.Idle;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        // Check if placed on NavMesh
+        if (!agent.isOnNavMesh)
+        {
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(transform.position, out hit, 5f, NavMesh.AllAreas))
+            {
+                transform.position = hit.position;
+            }
+            else
+            {
+                Debug.LogWarning("Zombie not on NavMesh — destroying.");
+                Destroy(gameObject);
+                return;
+            }
+        }
 
         timer = wanderTimer;
+        currentState = State.Wander;
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null || agent == null || !agent.isOnNavMesh)
+            return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        if (distance <= attackRange)
+        // Check if player is in front view
+        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+        float angle = Vector3.Angle(transform.forward, directionToPlayer);
+        bool playerInFront = angle < viewAngle * 0.5f;
+
+        // State logic
+        if (distanceToPlayer <= attackDistance && playerInFront)
         {
-            AttackPlayer();
+            currentState = State.Attack;
         }
-        else if (distance <= detectionRange && CanSeePlayer())
+        else if (distanceToPlayer <= chaseDistance && playerInFront)
         {
-            ChasePlayer();
+            currentState = State.Chase;
         }
         else
         {
-            Wander();
+            currentState = State.Wander;
+        }
+
+        switch (currentState)
+        {
+            case State.Wander:
+                Wander();
+                break;
+
+            case State.Chase:
+                ChasePlayer();
+                break;
+
+            case State.Attack:
+                AttackPlayer();
+                break;
+            default:
+                animator.SetBool("isWalking", false);
+                animator.SetBool("isRunning", false);
+                break;
         }
     }
 
     void Wander()
     {
         timer += Time.deltaTime;
+        agent.speed = 1.5f;
+
+        // ✅ WALK ANIMATION
+        animator.SetBool("isWalking", true);
+        animator.SetBool("isRunning", false);
 
         if (timer >= wanderTimer)
         {
             Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
             agent.SetDestination(newPos);
             timer = 0;
-
-            // 🟡 ANIMATION PLACEHOLDER: Set to walking
-            // animator.Play("Walk");
         }
     }
 
     void ChasePlayer()
     {
+        if (player == null) return;
+
         agent.SetDestination(player.position);
-        // 🟡 ANIMATION PLACEHOLDER: Set to running
-        // animator.Play("Run");
-    }
+        agent.speed = 3.5f;
+
+        // ✅ RUN ANIMATION
+        animator.SetBool("isRunning", true);
+        animator.SetBool("isWalking", false);
+}
 
     void AttackPlayer()
     {
-        if (!isAttacking)
+        agent.ResetPath();
+
+        // ✅ ATTACK ANIMATION
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isRunning", false);
+        animator.SetTrigger("Attack");
+
+        if (Time.time > lastAttackTime + attackCooldown)
         {
-            isAttacking = true;
-            agent.ResetPath();
-
-            // 🟡 ANIMATION PLACEHOLDER: Set to attacking
-            // animator.Play("Attack");
-
-            // Damage delay to match animation timing
-            Invoke(nameof(DealDamage), 0.5f);
-            Invoke(nameof(ResetAttack), 1.5f);  // cooldown before next attack
+            lastAttackTime = Time.time;
+            Debug.Log("Zombie attacks player!");
+            // Optional: deal damage here
         }
     }
 
-    void DealDamage()
+    public static Vector3 RandomNavSphere(Vector3 origin, float distance, int layermask)
     {
-        // TODO: Call PlayerHealth.TakeDamage(damage);
-        Debug.Log("Zombie dealt damage to player!");
-    }
+        Vector3 randomDirection = Random.insideUnitSphere * distance;
+        randomDirection += origin;
 
-    void ResetAttack()
-    {
-        isAttacking = false;
-    }
-
-    bool CanSeePlayer()
-    {
-        Vector3 direction = (player.position - transform.position).normalized;
-        float angle = Vector3.Angle(transform.forward, direction);
-
-        if (angle < 60f)  // field of view
-        {
-            RaycastHit hit;
-            if (Physics.Raycast(transform.position + Vector3.up, direction, out hit, detectionRange))
-            {
-                if (hit.collider.CompareTag("Player"))
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    public static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
-    {
-        Vector3 randDirection = Random.insideUnitSphere * dist;
-        randDirection += origin;
         NavMeshHit navHit;
-        NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
+        NavMesh.SamplePosition(randomDirection, out navHit, distance, layermask);
         return navHit.position;
     }
 }
