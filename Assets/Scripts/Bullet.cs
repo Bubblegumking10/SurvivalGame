@@ -6,31 +6,37 @@ public class Bullet : MonoBehaviour
     public float lifeTime = 5f;
     public float damage = 25f;
 
-    private Rigidbody rb;
-
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = transform.forward * speed;
-
-        // Destroy after lifetime expires
+        // Auto-destroy as a safety
         Destroy(gameObject, lifeTime);
     }
 
-    void OnCollisionEnter(Collision collision)
+    void Update()
     {
-        // If we hit a zombie
-        if (collision.gameObject.CompareTag("Zombie"))
+        // Move the bullet forward manually (frame-rate independent)
+        transform.Translate(transform.forward * speed * Time.deltaTime, Space.World);
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        // Debug to help you see what was hit
+        Debug.Log($"Bullet trigger hit: {other.gameObject.name} (tag: {other.tag})");
+
+        if (other.CompareTag("Zombie"))
         {
-            // Deal damage (requires ZombieHealth script on zombie)
-            ZombieHealth health = collision.gameObject.GetComponent<ZombieHealth>();
+            ZombieHealth health = other.GetComponent<ZombieHealth>();
             if (health != null)
             {
                 health.TakeDamage(damage);
+                Debug.Log("Applied damage to zombie");
             }
         }
 
-        // Destroy bullet on any collision
+        // Optionally ignore collisions with player or weapon layer:
+        // if (other.CompareTag("Player")) return;
+
+        // Destroy on any contact
         Destroy(gameObject);
     }
 }

@@ -49,6 +49,12 @@ public class ZombieHealth : MonoBehaviour
             Instantiate(deathEffect, transform.position + Vector3.up * 1f, Quaternion.identity);
         }
 
+        PlayerUI ui = Object.FindFirstObjectByType<PlayerUI>();
+        if (ui != null)
+        {
+            ui.UpdateScore(1); // Add 1 per zombie killed
+        }
+
         // Destroy zombie after a delay
         Destroy(gameObject, 2f);
     }

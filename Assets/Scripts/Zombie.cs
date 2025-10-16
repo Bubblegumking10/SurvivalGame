@@ -128,16 +128,26 @@ public class ZombieAI : MonoBehaviour
     {
         agent.ResetPath();
 
-        // ✅ ATTACK ANIMATION
+        // ✅ Stop movement animations and trigger attack animation
         animator.SetBool("isWalking", false);
         animator.SetBool("isRunning", false);
         animator.SetTrigger("Attack");
 
+        // ✅ Check cooldown before dealing damage
         if (Time.time > lastAttackTime + attackCooldown)
         {
             lastAttackTime = Time.time;
             Debug.Log("Zombie attacks player!");
-            // Optional: deal damage here
+
+            // ✅ Deal damage only when cooldown allows
+            if (player != null)
+            {
+                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(10f); // adjust value if needed
+                }
+            }
         }
     }
 
